@@ -58,6 +58,8 @@ final class Drawer {
 
     private float last = -1;
     private float shown;
+    /** When the mouth last moved, so the answering smile waits for a real pause and not a gap between words. */
+    private float loudAt;
     private float phon = 0.5f;
     private float gazeX, gazeY, gazeTX, gazeTY, nextGaze;
     private float blinkStart = -1, nextBlink = 1.5f, happyUntil, nextHappy = 6;
@@ -228,6 +230,7 @@ final class Drawer {
 
         float before = shown;
         shown += (level - shown) * Math.min(1, dt * 18);
+        if (shown >= 0.05f) loudAt = now;
         // A new mouth shape at the start of each syllable
         if (before * GAIN < 0.12f && shown * GAIN >= 0.12f) phon = random.nextFloat();
 
@@ -496,7 +499,7 @@ final class Drawer {
         float gx = gazeX * 26, gy = gazeY * 14;
         float bf = blinkFactor(now);
         boolean happy = !v.calm && (("idle".equals(state) && now < happyUntil)
-            || ("answering".equals(state) && shown < 0.05f && Math.sin(now * 0.9) > 0.55));
+            || ("answering".equals(state) && now - loudAt > 0.5f && Math.sin(now * 0.9) > 0.55));
 
         // Eyes, in the holiday's outline: the pumpkin's triangles at Halloween (round and wide while listening) and
         // hearts at Valentine's (round while muted)
