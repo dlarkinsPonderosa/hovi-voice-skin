@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": 1,
+  "id": "hovi-voice-skin",
+  "name": "Hovi",
+  "version": "0.1.0",
+  "minAndroidSdk": 24,
+  "minAppVersion": "2026.10.30",
+  "entryClass": "ca.ponderosa.hovi.HoviPlugin",
+  "description": "A voice skin with Hovi, a little hovering robot (or robot cat) whose face is drawn live on its screen: glowing lens eyes that blink and look around, a mouth that moves with the answer, and lights that sweep, pulse and spin as it listens, thinks and talks. It can dress up for holidays, picked by hand or by a Home Assistant entity.",
+  "author": "Ponderosa",
+  "license": "Apache-2.0",
+  "capabilities": [
+    "overlay",
+    "host.read",
+    "voice.skin",
+    "voice.text"
+  ],
+  "icon": "icon.png",
+  "voiceSkinThumbnail": "voice-skin.png",
+  "settings": [
+    {
+      "key": "holiday",
+      "type": "select",
+      "title": "Holiday",
+      "options": [
+        "Follow Home Assistant",
+        "None",
+        "New Year's",
+        "Valentine's",
+        "St Patrick's",
+        "Easter",
+        "Canada Day",
+        "Independence Day",
+        "Thanksgiving",
+        "Halloween",
+        "Remembrance",
+        "Christmas",
+        "Birthday"
+      ],
+      "default": "Follow Home Assistant",
+      "group": "Appearance",
+      "description": "The outfit and light colours. Follow Home Assistant reads the holiday entity below; any state that isn't one of these holidays shows the everyday robot."
+    },
+    {
+      "key": "holidayEntity",
+      "type": "entity",
+      "title": "Holiday entity",
+      "default": "",
+      "group": "Appearance",
+      "description": "The Home Assistant entity whose state names the holiday, used with Follow Home Assistant, such as an input_select you change yourself or a template sensor. Leave it empty for the everyday robot."
+    },
+    {
+      "key": "frameRate",
+      "type": "select",
+      "title": "Frame rate",
+      "options": [
+        "Auto",
+        "Full",
+        "30 fps",
+        "20 fps"
+      ],
+      "default": "Auto",
+      "group": "Appearance",
+      "description": "Auto starts at full speed and drops to 30, then 20 fps on a device that can't keep up, such as an Echo Show. Each kiosk decides for itself, so one synced setting suits a mixed fleet."
+    },
+    {
+      "key": "darkness",
+      "type": "number",
+      "title": "Darkness",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 0,
+      "group": "Appearance",
+      "description": "How dark the robot's white shell is, in percent. Highlights stay bright; the lights, face and holiday props don't change."
+    },
+    {
+      "key": "base",
+      "type": "select",
+      "title": "Appearance",
+      "options": [
+        "Robot",
+        "Robot Cat"
+      ],
+      "default": "Robot",
+      "group": "Appearance",
+      "description": "Robot, or Robot Cat: the same robot with cat ears, a floating tail and a cat's face."
+    }
+  ],
+  "commands": []
+}
