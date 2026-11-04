@@ -1,6 +1,6 @@
 # Artwork
 
-The robot artwork in this repository (`assets/art.pak`, and the icon and thumbnail in `assets/`) is **not** covered by the Apache-2.0 license that covers the code.
+The robot artwork in this repository (`assets/art.pak`, the icon and thumbnail in `assets/`, and the previews in `docs/`) is **not** covered by the Apache-2.0 license that covers the code.
 
 It was made with a licensed stock image service and is included only so that Hovi can run. You may install and use Hovi, including the artwork as part of it. You may not extract the artwork from the skin, reuse it elsewhere, or redistribute it on its own.
 

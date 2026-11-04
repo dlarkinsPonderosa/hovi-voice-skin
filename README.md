@@ -2,7 +2,7 @@
 
 A voice skin for [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite). While it is picked, your assistant is Hovi, a little hovering robot, instead of the usual overlay.
 
-![Hovi](assets/voice-skin.png)
+![Hovi resting, listening, thinking and answering](docs/hovi.webp)
 
 Hovi's face is drawn live on its screen, like lit glass: lens eyes with glints that blink and glance around, and a mouth that opens into a little screen of level bars as it talks. Its light strips (ear rings, chest ring, hover ring, forearms and fingers) move with the conversation.
 
@@ -14,9 +14,13 @@ Hovi's face is drawn live on its screen, like lit glass: lens eyes with glints t
 
 ## Appearance
 
+![Robot and Robot Cat](docs/appearances.png)
+
 **Robot** (the default) or **Robot Cat**, the same robot with cat ears, a floating tail and a cat's face: lidded eyes with slit pupils, a cat's mouth and fibre-optic whiskers.
 
 ## Holidays
+
+![Hovi dressed for each holiday in turn](docs/holidays.webp)
 
 The **Holiday** setting dresses Hovi up with outfits, props and light colours: New Year's, Valentine's, St Patrick's, Easter, Canada Day, Independence Day, Thanksgiving, Halloween, Remembrance, Christmas, Birthday. Some bring extras, such as fireworks, snow, confetti or falling leaves, and Halloween and Valentine's change its eyes.
 
