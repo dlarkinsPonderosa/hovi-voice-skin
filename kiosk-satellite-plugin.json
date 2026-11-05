@@ -3,7 +3,7 @@
   "apiVersion": 1,
   "id": "hovi-voice-skin",
   "name": "Hovi",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "minAndroidSdk": 24,
   "minAppVersion": "2026.10.30",
   "entryClass": "ca.ponderosa.hovi.HoviPlugin",

@@ -43,9 +43,21 @@ Hovi also follows **Voice Satellite > Appearance**: Background sets how much of 
 - Kiosk Satellite 2026.10.30 or later
 - The native Voice Satellite runtime turned on
 
-## Install
+## Installation
 
-Download the ZIP from the latest release and use **Plugin Manager > Developer Tools > Install from ZIP**, or install it from the release in Kiosk Satellite.
+### Community Plugins (Recommended)
+
+Hovi is listed in [Community Plugins](https://kiosksatellite.com/plugins/). Use the button below to open it in your Kiosk Satellite and install it.
+
+[![Install in Kiosk Satellite](https://kiosksatellite.com/img/badges/plugin-add.svg)](https://kiosksatellite.com/redirect/plugin/?repository=dlarkinsPonderosa/hovi-voice-skin)
+
+Or search for `Hovi` in **Settings > Plugin Manager > Browse plugins** in Kiosk Satellite.
+
+### Manual
+
+1. Open **Settings > Plugin Manager** in Kiosk Satellite and turn on **Enable Plugins**.
+2. Choose **Add plugin**, paste `https://github.com/dlarkinsPonderosa/hovi-voice-skin` and choose **Preview**.
+3. Review the plugin and choose **Trust and install**.
 
 ## License
 
