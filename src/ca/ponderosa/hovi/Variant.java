@@ -44,10 +44,26 @@ final class Variant {
     int[] confetti;
     static final int[] GOLD_CONFETTI = {0xFFFFCC4D, 0xFFF5D77A, 0xFFC9D1D9, 0xFFE8EDF2, 0xFFFFFFFF};
     static final int[] RAINBOW_CONFETTI = {0xFFFF4D4D, 0xFFFFB000, 0xFFFFE14D, 0xFF3DDC84, 0xFF3DB8FF, 0xFF9B6BFF, 0xFFFF5FAE};
+    /** The accent font (a file in assets/fonts) for the name, what was said and the actions. */
+    String font = Fonts.MONO;
+    /** The weight for a variable font, or 0 for a font with one weight. */
+    int fontWeight = 400;
+    /** Evens out the accent fonts' sizes: some are small or narrow for their size. */
+    float fontScale = 1;
+    /** The name spaced out in capitals, where the font suits it. */
+    boolean fontCaps = true;
 
     private Variant(String face, String light) {
         this.face = Color.parseColor(face);
         this.light = Color.parseColor(light);
+    }
+
+    private Variant font(String file, int weight, float scale, boolean caps) {
+        font = file;
+        fontWeight = weight;
+        fontScale = scale;
+        fontCaps = caps;
+        return this;
     }
 
     private Variant lights(String... pairs) {
@@ -81,6 +97,7 @@ final class Variant {
             case "newyearseve":
                 v = new Variant("#fff4d6", "#ffffff").lights("ear_l", "#ffcc4d", "ear_r", "#ffcc4d", "chest_ring", "#ffcc4d", "hover", "#ffcc4d", "tail_2", "#ffcc4d");
                 v.hat = "ny_hat";
+                v.font("Limelight-Regular.ttf", 0, 1.05f, true);
                 v.tail = "ny_tail";
                 v.bulbs = new String[] {"ny_bulbs_0", "ny_bulbs_1", "ny_bulbs_2"};
                 v.floats = new String[] {"ny_display"};
@@ -98,6 +115,7 @@ final class Variant {
                 v = new Variant("#e6eeff", "#ff2a2a").lights("ear_l", "#4d7cff", "ear_r", "#4d7cff", "chest_slot", "#ffffff", "hover", "#4d7cff",
                         "tail_2", "#ffffff", "tail_3", "#4d7cff");
                 v.hat = "us_cap";
+                v.font("Graduate-Regular.ttf", 0, 1f, true);
                 v.floats = new String[] {"us_panel_l", "us_panel_r"};
                 v.sparks = FLAG_SPARKS;
                 return v;
@@ -105,6 +123,7 @@ final class Variant {
             case "valentinesday":
                 v = new Variant("#ffc2dd", "#ff7ab8").lights("ear_l", "#ff2e7a", "ear_r", "#ff2e7a", "chest_ring", "#ff1a4a", "hover", "#ff2e7a", "tail_1", "#ff1a4a", "tail_3", "#ff1a4a");
                 v.chest = "heart";
+                v.font("DancingScript-Variable.ttf", 600, 1.3f, false);
                 v.floats = new String[] {"heart", "heart_l", "heart_s"};
                 // The cupid on the tail tip is only on the white base; a prop that's missing is skipped
                 v.wear.put("tail", new String[] {"cupid"});
@@ -114,18 +133,21 @@ final class Variant {
             case "stpatricksday":
                 v = new Variant("#9dffb8", "#19e65a").lights("chest_slot", "#ffd23a");
                 v.hat = "leprechaun_hat";
+                v.font("UncialAntiqua-Regular.ttf", 0, 1f, false);
                 v.chest = "shamrock";
                 v.floats = new String[] {"pot_of_gold"};
                 return v;
             case "easter":
                 v = new Variant("#ffe3f1", "#25e0d0").lights("ear_l", "#ff5fae", "ear_r", "#ff5fae", "chest_slot", "#ffd23a", "hover", "#ffd23a", "tail_1", "#ff5fae", "tail_3", "#ffd23a");
                 v.hat = "bunny_ears";
+                v.font("Fredoka-Variable.ttf", 600, 1.05f, true);
                 v.floats = new String[] {"egg", "egg_r"};
                 return v;
             case "canadaday":
             case "canada":
                 v = new Variant("#ffffff", "#ff1a1a").lights("chest_slot", "#ffffff", "hover", "#ffffff", "tail_2", "#ffffff");
                 v.hat = "canada_cap";
+                v.font("BebasNeue-Regular.ttf", 0, 1.35f, true);
                 v.chest = "maple";
                 // flag_r, a mirrored flag on the right, is only on the white base
                 v.floats = new String[] {"flag", "flag_r"};
@@ -134,6 +156,7 @@ final class Variant {
             case "thanksgiving":
                 v = new Variant("#ffc477", "#ffb000").lights("ear_l", "#ff7a00", "ear_r", "#ff7a00", "hover", "#ff3d00", "tail_1", "#ff3d00", "tail_2", "#ff7a00");
                 v.chest = "oak";
+                v.font("Merienda-Variable.ttf", 600, 1f, false);
                 v.falling = leaves;
                 // The turkey on the tail tip is only on the white base; a prop that's missing is skipped
                 v.wear.put("tail", new String[] {"turkey"});
@@ -141,6 +164,7 @@ final class Variant {
             case "halloween":
                 v = new Variant("#ff8a1c", "#ff6200");
                 v.hat = "bat";
+                v.font("Creepster-Regular.ttf", 0, 1.2f, true);
                 // pumpkin_r is only on the white base; a prop that's missing is skipped
                 v.floats = new String[] {"pumpkin", "pumpkin_r"};
                 v.pumpkinFace = true;
@@ -149,6 +173,7 @@ final class Variant {
             case "remembranceday":
                 v = new Variant("#f2ece6", "#ffe0cc");
                 v.hat = "beret";
+                v.font("Marcellus-Regular.ttf", 0, 1.15f, true);
                 v.wear.put("body", new String[] {"poppy_pin"});
                 v.wear.put("tail", new String[] {"tail_poppy"});
                 // The white base's poppy chest light (it has no pin); the metal base has no chest_poppy_w,
@@ -159,6 +184,7 @@ final class Variant {
             case "christmas":
                 v = new Variant("#fff1d6", "#ff1414").lights("chest_ring", "#14e650", "arm_l", "#14e650", "arm_r", "#14e650", "tail_2", "#14e650");
                 v.hat = "santa_hat";
+                v.font("MountainsofChristmas-Bold.ttf", 0, 1.25f, false);
                 v.tail = "xmas_tail";
                 v.bulbs = new String[] {"bulbs_0", "bulbs_1", "bulbs_2"};
                 v.floats = new String[] {"cane_l", "cane_r"};
@@ -168,6 +194,7 @@ final class Variant {
             case "birthday":
                 v = new Variant("#ffffff", "#ffffff");
                 v.hat = "party_hat";
+                v.font("Chewy-Regular.ttf", 0, 1.15f, false);
                 // gift_l, a second present on the left, is only on the white base
                 v.floats = new String[] {"gift", "gift_l"};
                 v.confetti = RAINBOW_CONFETTI;

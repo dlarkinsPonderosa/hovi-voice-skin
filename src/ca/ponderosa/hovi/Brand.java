@@ -7,6 +7,8 @@ final class Brand {
 
     /** The overlay this skin shows. */
     static final String KEY = "hovi";
+    /** The name over the turn on a full screen. */
+    static final String NAME = "Hovi";
     /** The everyday face and light colours: cyan. */
     static final String FACE = "#b8f3ff", LIGHT = "#2fd8f5";
 

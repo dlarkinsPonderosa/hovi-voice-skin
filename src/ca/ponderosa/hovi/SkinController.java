@@ -4,9 +4,11 @@ package ca.ponderosa.hovi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -51,6 +53,15 @@ final class SkinController {
     volatile String command = "";
     volatile String answer = "";
     volatile String tool = "";
+    /** Every action in the turn, a bulleted line each. */
+    volatile String tools = "";
+    /** The Name setting, over the turn on a full screen; empty for none. */
+    volatile String robotName = Brand.NAME;
+    /** The Answer font setting: true for Atkinson Hyperlegible, false for Kiosk Satellite's own. */
+    volatile boolean hyperlegible;
+    /** The Accent font setting: "Holiday", "Monospace" or "Same as the answer". */
+    volatile String accentFont = "Holiday";
+    volatile Fonts fonts;
     /** Null for Skin default, which is solid black. */
     volatile Float background;
     volatile float textScale = 1;
@@ -74,6 +85,7 @@ final class SkinController {
     synchronized void start(PluginHost host) {
         this.host = host;
         int current = ++generation;
+        fonts = new Fonts(host);
         try {
             for (String event : EVENTS) host.subscribe(event);
         } catch (IllegalArgumentException | UnsupportedOperationException olderHost) {
@@ -146,6 +158,9 @@ final class SkinController {
         Object dark = settings.get("darkness");
         darkness = dark instanceof Number ? Math.max(0, Math.min(1, ((Number) dark).floatValue() / 100)) : 0;
         base = Brand.base(settings.get("base"));
+        robotName = settings.get("name") instanceof String ? ((String) settings.get("name")).trim() : Brand.NAME;
+        hyperlegible = "Atkinson Hyperlegible".equals(settings.get("answerFont"));
+        accentFont = settings.get("accentFont") instanceof String ? (String) settings.get("accentFont") : "Holiday";
         if (host != null && loading != null && !loading.equals(base)) load(generation, base);
         Object id = settings.get("holidayEntity");
         String wanted = FOLLOW.equals(holidaySetting) && id instanceof String && !((String) id).trim().isEmpty() ? ((String) id).trim() : null;
@@ -188,6 +203,7 @@ final class SkinController {
         Assets loaded = assets;
         String holiday = FOLLOW.equals(holidaySetting) ? entityHoliday : holidaySetting;
         variant = Variant.of(holiday, loaded == null ? Collections.<String>emptyList() : loaded.leaves);
+        restyleLater();
     }
 
     synchronized void onEvent(String event, Map<String, Object> payload) {
@@ -247,13 +263,26 @@ final class SkinController {
         answer = text.get("answer") instanceof String ? (String) text.get("answer") : "";
         Object tools = text.get("tools");
         tool = tools instanceof List && !((List<?>) tools).isEmpty() ? String.valueOf(((List<?>) tools).get(((List<?>) tools).size() - 1)) : "";
+        StringBuilder lines = new StringBuilder();
+        if (tools instanceof List) {
+            // A bullet (U+2022) before each action, one to a line
+            for (Object each : (List<?>) tools) {
+                if (lines.length() > 0) lines.append((char) 10);
+                lines.append((char) 0x2022).append(' ').append(each);
+            }
+        }
+        this.tools = lines.toString();
         SkinView current = view;
         if (current != null) current.post(current::refresh);
     }
 
     private void restyleLater() {
         SkinView current = view;
-        if (current != null) current.post(current::restyle);
+        // Refresh too: a new Name shows without waiting for the next turn
+        if (current != null) current.post(() -> {
+            current.restyle();
+            current.refresh();
+        });
     }
 
     /** Shows the skin while it is picked and the overlay is up, in the look that matches it. */
@@ -294,7 +323,7 @@ final class SkinController {
         level = 0;
         state = "idle";
         muted = false;
-        command = answer = tool = "";
+        command = answer = tool = tools = "";
         background = null;
         textScale = 1;
         reactive = true;
@@ -336,6 +365,9 @@ final class SkinController {
         private final RobotView robot;
         private final TextView said;
         private final TextView answered;
+        /** Full screen only: the assistant's name over the turn, and the actions under the answer. */
+        private final TextView name;
+        private final TextView actions;
         private final LinearLayout card;
         private KsTheme ksTheme;
 
@@ -346,6 +378,8 @@ final class SkinController {
             robot = new RobotView(context);
             said = new TextView(context);
             answered = new TextView(context);
+            name = new TextView(context);
+            actions = new TextView(context);
             setClipChildren(false);
             setClipToPadding(false);
             int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
@@ -377,12 +411,12 @@ final class SkinController {
                 LinearLayout words = new LinearLayout(context);
                 words.setOrientation(LinearLayout.VERTICAL);
                 words.setGravity(wide ? Gravity.CENTER_VERTICAL : Gravity.CENTER_HORIZONTAL);
-                said.setGravity(wide ? Gravity.START : Gravity.CENTER);
-                answered.setGravity(wide ? Gravity.START : Gravity.CENTER);
-                words.addView(said, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                LinearLayout.LayoutParams answerLine = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                answerLine.topMargin = theme.px(8);
-                words.addView(answered, answerLine);
+                for (TextView line : new TextView[] {name, said, answered, actions}) {
+                    line.setGravity(wide ? Gravity.START : Gravity.CENTER);
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    params.topMargin = theme.px(line == name ? 0 : line == said ? 6 : line == answered ? 8 : 10);
+                    words.addView(line, params);
+                }
                 LinearLayout layout = new LinearLayout(context);
                 layout.setOrientation(wide ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
                 layout.setGravity(Gravity.CENTER);
@@ -426,19 +460,78 @@ final class SkinController {
                 Float chosen = background;
                 float opacity = chosen != null ? chosen : 1f;
                 setBackgroundColor(Color.argb(Math.round(255 * opacity), 0, 0, 0));
+                ksTheme.styleText(name, 15 * scale, 400, "onSurfaceVariant");
                 ksTheme.styleText(said, 20 * scale, 400, "onSurfaceVariant");
                 ksTheme.styleText(answered, 28 * scale, 500, "onSurface");
+                ksTheme.styleText(actions, 16 * scale, 400, "onSurfaceVariant");
             }
-            said.setTextColor(0xFFB9C2CC);
+            // The answer in one readable font; the short lines around it in the holiday's colour and font
+            Fonts loaded = fonts;
+            Typeface answerFace = hyperlegible && loaded != null ? loaded.get(Fonts.HYPERLEGIBLE, 0) : null;
+            if (answerFace != null) answered.setTypeface(answerFace);
+            Variant v = variant;
+            String accent = accentFont;
+            Typeface accentFace = null;
+            float accentScale = 1;
+            boolean caps = false;
+            if ("Same as the answer".equals(accent)) {
+                accentFace = answered.getTypeface();
+            } else if (loaded != null) {
+                boolean holiday = !"Monospace".equals(accent);
+                accentFace = holiday ? loaded.get(v.font, v.fontWeight) : loaded.get(Fonts.MONO, 400);
+                accentScale = holiday && accentFace != null ? v.fontScale : 1;
+                caps = !holiday || v.fontCaps;
+            }
+            int color = readable(v.light("ear_l", SystemClock.uptimeMillis() / 1000f));
+            for (TextView line : docked ? new TextView[] {said} : new TextView[] {name, said, actions}) {
+                if (accentFace != null) line.setTypeface(accentFace);
+                if (accentScale != 1) line.setTextSize(TypedValue.COMPLEX_UNIT_PX, line.getTextSize() * accentScale);
+                line.setTextColor(color);
+            }
+            name.setAllCaps(caps);
+            name.setLetterSpacing(caps ? 0.14f : 0.04f);
+            name.setAlpha(0.85f);
             answered.setTextColor(0xFFF2F5F8);
+            answered.setShadowLayer(ksTheme.px(7), 0, 0, (color & 0x00FFFFFF) | 0x59000000);
             robot.invalidate();
         }
 
+        /** A light colour as text: lifted towards white until it reads on black (pure red and blue don't). */
+        private int readable(int color) {
+            float r = Color.red(color), g = Color.green(color), b = Color.blue(color);
+            for (int i = 0; i < 20 && luminance(r, g, b) < 0.33f; i++) {
+                r += (255 - r) * 0.1f;
+                g += (255 - g) * 0.1f;
+                b += (255 - b) * 0.1f;
+            }
+            return Color.rgb(Math.round(r), Math.round(g), Math.round(b));
+        }
+
+        private float luminance(float r, float g, float b) {
+            return 0.2126f * linear(r) + 0.7152f * linear(g) + 0.0722f * linear(b);
+        }
+
+        private float linear(float channel) {
+            float c = channel / 255;
+            return c <= 0.03928f ? c / 12.92f : (float) Math.pow((c + 0.055f) / 1.055f, 2.4f);
+        }
+
         void refresh() {
-            said.setText(command);
+            said.setText(command.isEmpty() ? "" : "> " + command);
             said.setVisibility(command.isEmpty() ? GONE : VISIBLE);
-            answered.setText(answer.isEmpty() ? tool : answer);
-            answered.setVisibility(answer.isEmpty() && tool.isEmpty() ? GONE : VISIBLE);
+            String called = robotName;
+            name.setText(called);
+            name.setVisibility(docked || called.isEmpty() || (command.isEmpty() && answer.isEmpty() && tools.isEmpty()) ? GONE : VISIBLE);
+            if (docked) {
+                // No room for a list in the bubble: the latest action stands in until the answer comes
+                answered.setText(answer.isEmpty() ? tool : answer);
+                answered.setVisibility(answer.isEmpty() && tool.isEmpty() ? GONE : VISIBLE);
+            } else {
+                answered.setText(answer);
+                answered.setVisibility(answer.isEmpty() ? GONE : VISIBLE);
+                actions.setText(tools);
+                actions.setVisibility(tools.isEmpty() ? GONE : VISIBLE);
+            }
         }
 
         /** The robot, redrawn every frame, at a set rate, or as fast as Auto finds the device keeps up. */
