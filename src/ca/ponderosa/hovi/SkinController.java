@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -55,6 +56,12 @@ final class SkinController {
     volatile String tool = "";
     /** Every action in the turn, a bulleted line each. */
     volatile String tools = "";
+    /**
+     * The width Kiosk Satellite's result panel takes at the right of a wide screen, as a share of it, or 0 for no panel.
+     * KS draws weather, quotes, images and videos over the skin there, and plugins aren't told when (SDK 1), so it's
+     * guessed from the tools called: the panel covered the answer on the kitchen kiosk (2026-11-08).
+     */
+    volatile float panelShare;
     /** The Name setting, over the turn on a full screen; empty for none. */
     volatile String robotName = Brand.NAME;
     /** The Answer font setting: true for Atkinson Hyperlegible, false for Kiosk Satellite's own. */
@@ -264,16 +271,31 @@ final class SkinController {
         Object tools = text.get("tools");
         tool = tools instanceof List && !((List<?>) tools).isEmpty() ? String.valueOf(((List<?>) tools).get(((List<?>) tools).size() - 1)) : "";
         StringBuilder lines = new StringBuilder();
+        float share = 0;
         if (tools instanceof List) {
             // A bullet (U+2022) before each action, one to a line
             for (Object each : (List<?>) tools) {
                 if (lines.length() > 0) lines.append((char) 10);
                 lines.append((char) 0x2022).append(' ').append(each);
+                share = Math.max(share, panelShare(String.valueOf(each)));
             }
         }
         this.tools = lines.toString();
+        panelShare = share;
         SkinView current = view;
         if (current != null) current.post(current::refresh);
+    }
+
+    /**
+     * The panel one action brings up, from its name as KS shows it ("Get weather forecast"). KS's own chat keeps
+     * 32.5% of the width plus 40 dp clear for weather and quotes and 37.5% for images and videos (chatRightInset in
+     * its assist_panels.dart). Web searches only sometimes have a picture, so they leave the words where they are.
+     */
+    private static float panelShare(String action) {
+        String a = action.toLowerCase(java.util.Locale.ROOT);
+        if (a.contains("image") || a.contains("video")) return 0.375f;
+        if (a.contains("weather forecast") || a.contains("financial")) return 0.325f;
+        return 0;
     }
 
     private void restyleLater() {
@@ -324,6 +346,7 @@ final class SkinController {
         state = "idle";
         muted = false;
         command = answer = tool = tools = "";
+        panelShare = 0;
         background = null;
         textScale = 1;
         reactive = true;
@@ -369,6 +392,11 @@ final class SkinController {
         private final TextView name;
         private final TextView actions;
         private final LinearLayout card;
+        /** Full screen on a wide screen only: the robot and words side by side, which make room for a result panel. */
+        private LinearLayout row;
+        private int robotSize;
+        private int screenWidth;
+        private int screenHeight;
         private KsTheme ksTheme;
 
         SkinView(Context context, KsTheme theme, boolean docked) {
@@ -382,8 +410,8 @@ final class SkinController {
             actions = new TextView(context);
             setClipChildren(false);
             setClipToPadding(false);
-            int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
-            int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
+            screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+            screenHeight = context.getResources().getDisplayMetrics().heightPixels;
             if (docked) {
                 card = new LinearLayout(context);
                 card.setOrientation(LinearLayout.HORIZONTAL);
@@ -426,6 +454,8 @@ final class SkinController {
                     beside.leftMargin = theme.px(16);
                     layout.addView(words, beside);
                     layout.setPadding(0, 0, side, 0);
+                    row = layout;
+                    robotSize = size;
                 } else {
                     LinearLayout.LayoutParams below = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                     below.topMargin = theme.px(8);
@@ -531,6 +561,24 @@ final class SkinController {
                 answered.setVisibility(answer.isEmpty() ? GONE : VISIBLE);
                 actions.setText(tools);
                 actions.setVisibility(tools.isEmpty() ? GONE : VISIBLE);
+                makeRoomForPanel();
+            }
+        }
+
+        /**
+         * On a wide screen KS puts a result panel at the right, over the words beside the robot. While one shows, the
+         * words end where it starts and the robot shrinks to leave them half of what's left.
+         */
+        private void makeRoomForPanel() {
+            if (row == null) return;
+            float share = panelShare;
+            int right = share > 0 ? Math.round(screenWidth * share) + ksTheme.px(40) : ksTheme.px(48);
+            int size = share > 0 ? Math.round(Math.min(robotSize, (screenWidth - right) * 0.5f)) : robotSize;
+            if (row.getPaddingRight() != right) row.setPadding(0, 0, right, 0);
+            ViewGroup.LayoutParams params = robot.getLayoutParams();
+            if (params != null && params.width != size) {
+                params.width = params.height = size;
+                robot.setLayoutParams(params);
             }
         }
 

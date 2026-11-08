@@ -188,6 +188,9 @@ final class Variant {
                 v.tail = "xmas_tail";
                 v.bulbs = new String[] {"bulbs_0", "bulbs_1", "bulbs_2"};
                 v.floats = new String[] {"cane_l", "cane_r"};
+                // The reindeer on the tail tip is only on the white base, which leaves out cane_r for it; a prop
+                // that's missing is skipped
+                v.wear.put("tail", new String[] {"reindeer"});
                 v.rosyCheeks = true;
                 v.snow = true;
                 return v;
